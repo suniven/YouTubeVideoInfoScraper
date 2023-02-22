@@ -58,14 +58,44 @@ def process_response(response):
 
     result = []
     for index, item in enumerate(response["items"]):
-        video_id = item["snippet"]["videoId"]
+        video_id = item["id"]
+        snippet = item["snippet"]
+        publishedAt = snippet["publishedAt"]
+        channelId = snippet["channelId"]
+        title = snippet["title"]
+        description = snippet["description"]
+        try:
+            tags = snippet["tags"]
+
         result.append({'video_id': video_id})
         print("{0}: video {1}".format(index, video_id))
+
     return nextPageToken, result
 
 
+def test():
+    api_service_name, api_version, API_KEY, proxy_host, proxy_port = read_config('config.ini')
+    youtube = build_client(api_service_name, api_version, API_KEY, proxy_host, proxy_port)
+
+    df_id = pd.read_csv('0.csv', engine='python')
+    videoIdList = df_id.video_id.to_list()
+    step = 50  # 50个一组
+    videoIdLists = [videoIdList[i:i + step] for i in range(0, len(videoIdList), step)]
+
+    video_info = []
+    for index, videoIdList in enumerate(videoIdLists):
+        nextPageToken = None
+        response = get_video_info(youtube, videoIdList, nextPageToken)
+        nextPageToken, result = process_response(response)
+        print(response)
+        time.sleep(5)
+        with open('./response_example.json', 'w', encoding='utf8') as f:
+            json.dump(response, f, indent=4)
+        break
+
+
 def main():
-    api_service_name, api_version, API_KEY, proxy_host, proxy_port = read_config('config0.ini')
+    api_service_name, api_version, API_KEY, proxy_host, proxy_port = read_config('config.ini')
     youtube = build_client(api_service_name, api_version, API_KEY, proxy_host, proxy_port)
 
     df_id = pd.read_csv('0.csv', engine='python')
@@ -112,4 +142,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    test()
+    # main()
