@@ -9,6 +9,7 @@ import json
 import time
 from datetime import datetime
 import common.logger as logger
+from tqdm import tqdm
 
 _logger = logger.Logger('info')
 
@@ -35,6 +36,7 @@ def build_client(api_service_name, api_version, API_KEY, proxy_host, proxy_port)
 def get_video_info(youtube, videoIdList, pageToken):
     # print("video {0} || PageToken {1}".format(videoId, pageToken))
     id_string = ','.join(videoIdList)
+    print("Scraping {0} - {1}...".format(videoIdList[0], videoIdList[-1]))
     request = youtube.videos().list(part="snippet, status, statistics", id=id_string, pageToken=pageToken)
     try:
         response = request.execute()
@@ -57,18 +59,39 @@ def process_response(response):
         nextPageToken = None
 
     result = []
-    for index, item in enumerate(response["items"]):
+    for item in tqdm(response["items"]):
         video_id = item["id"]
         snippet = item["snippet"]
         publishedAt = snippet["publishedAt"]
         channelId = snippet["channelId"]
         title = snippet["title"]
         description = snippet["description"]
+        channelTitle = snippet["channelTitle"]
         try:
             tags = snippet["tags"]
+        except:
+            tags = []
+        statistics = item["statistics"]
+        try:
+            viewCount = statistics["viewCount"]
+        except:
+            viewCount = 0
+        try:
+            likeCount = statistics["likeCount"]
+        except:
+            likeCount = 0
 
-        result.append({'video_id': video_id})
-        print("{0}: video {1}".format(index, video_id))
+        result.append({
+            'videoId': video_id,
+            'videoTitle': title,
+            'videoDescription': description,
+            'videoPublishedAt': publishedAt,
+            'tags': tags,
+            'channelId': channelId,
+            'channelTitle': channelTitle,
+            'viewCount': viewCount,
+            'likeCount': likeCount
+        })
 
     return nextPageToken, result
 
@@ -99,7 +122,7 @@ def main():
     youtube = build_client(api_service_name, api_version, API_KEY, proxy_host, proxy_port)
 
     df_id = pd.read_csv('0.csv', engine='python')
-    videoIdList = df_id.video_id.to_list()
+    videoIdList = df_id.videoId.to_list()
     step = 50  # 50个一组
     videoIdLists = [videoIdList[i:i + step] for i in range(0, len(videoIdList), step)]
 
@@ -142,5 +165,5 @@ def main():
 
 
 if __name__ == "__main__":
-    test()
-    # main()
+    # test()
+    main()

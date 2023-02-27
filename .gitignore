@@ -2,6 +2,9 @@
 /json_files
 config.ini
 key.txt
+0.csv
+response_example.json
+test.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
