@@ -36,7 +36,7 @@ def build_client(api_service_name, api_version, API_KEY, proxy_host, proxy_port)
 def get_video_info(youtube, videoIdList, pageToken):
     # print("video {0} || PageToken {1}".format(videoId, pageToken))
     id_string = ','.join(videoIdList)
-    print("Scraping {0} - {1}...".format(videoIdList[0], videoIdList[-1]))
+    print("Scraping {0} - {1}".format(videoIdList[0], videoIdList[-1]))
     request = youtube.videos().list(part="snippet, status, statistics", id=id_string, pageToken=pageToken)
     try:
         response = request.execute()
